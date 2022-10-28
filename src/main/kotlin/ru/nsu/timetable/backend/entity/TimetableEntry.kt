@@ -18,7 +18,7 @@ class TimetableEntry(
     var teacher: Teacher,
 
     @ManyToOne
-    @JoinColumn(name = "group")
+    @JoinColumn(name = "group_")
     var group: Group,
 
     @ManyToOne
