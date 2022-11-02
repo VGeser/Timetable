@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 123
+      POSTGRES_USER: user
+      POSTGRES_DB: timetable
+    ports:
+      - 5432:5432
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8228:8080
+  app:
+    build:
+      .
+    environment:
+      - POSTGRES_DB_HOST=db
+    ports:
+      - 8337:8080
+
+
