@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//    implementation("org.springframework.boot:spring-boot-starter-data-rest")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -28,6 +29,11 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     implementation("io.jsonwebtoken:jjwt:0.9.1")
+
+    implementation("org.springdoc:springdoc-openapi-ui:1.6.12")
+    implementation("org.springdoc:springdoc-openapi-data-rest:1.6.12")
+    implementation("org.springdoc:springdoc-openapi-kotlin:1.6.12")
+    implementation("org.springdoc:springdoc-openapi-security:1.6.12")
 }
 
 tasks.withType<KotlinCompile> {
