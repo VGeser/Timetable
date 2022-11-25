@@ -10,7 +10,7 @@ class Room(
     var id: Long = 0,
 
     @Column(name = "name")
-    var name: Int = 0,
+    var name: String = "",
 
     @Column(name = "capacity")
     var capacity: Int = 0,

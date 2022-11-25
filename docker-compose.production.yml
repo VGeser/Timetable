@@ -1,3 +1,4 @@
+name: timetable
 services:
   db:
     image: postgres
@@ -8,11 +9,6 @@ services:
       POSTGRES_DB: timetable
     ports:
       - 5432:5432
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8228:8080
   app:
     build:
       .
