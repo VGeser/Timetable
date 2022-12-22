@@ -15,6 +15,7 @@ import ru.nsu.timetable.backend.security.jwt.JwtTokenProvider
 class SecurityConfig(private val jwtTokenProvider: JwtTokenProvider): WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
+            .cors().and()
             .httpBasic().disable()
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
