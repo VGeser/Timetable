@@ -14,5 +14,8 @@ class Teacher(
 
     //slot is present only if its value is true
     @ManyToMany
-    var availableSlots: Set<Slot>
+    var availableSlots: Set<Slot>,
+
+    @ManyToMany
+    var courses: Set<Integer>
 )

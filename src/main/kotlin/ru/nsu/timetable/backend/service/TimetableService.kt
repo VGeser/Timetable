@@ -32,12 +32,11 @@ abstract class TimetableValidator(
 }
 
 
-class TimetableService {
-    fun generateTimetable(){
-
+class TimetableService(private val serviceImpl: TimetableGeneratorServiceImpl) {
+    fun generateTimetable() {
     }
 
-    fun validateTimetable(){
+    fun validateTimetable() {
 
     }
 }
