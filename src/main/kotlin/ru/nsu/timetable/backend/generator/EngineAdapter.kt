@@ -10,6 +10,11 @@ class EngineAdapter {
         val givenCourses = repos.courses.findAll().toMutableList()
         val givenRooms = repos.rooms.findAll().toMutableList()
         val givenGroups = repos.groups.findAll().toMutableList()
+        val slotPosToId = mutableMapOf<Int, MutableMap<Int, Long>>()
+        givenSlots.forEach {
+            if(slotPosToId[it.slotRow.toInt()] == null)slotPosToId[it.slotRow.toInt()] = mutableMapOf()
+            slotPosToId[it.slotRow.toInt()]!![it.day.toInt()] = it.id
+        }
 
         val adaptedTeachers = adaptTeachers(givenTeachers)
         val adaptedCourses = adaptCourses(givenCourses)
@@ -19,25 +24,19 @@ class EngineAdapter {
         val builder = TimetableBuilder(adaptedTeachers, adaptedGroups, adaptedCourses, adaptedRooms)
         val computeRes = builder.generate()
 
-        return adaptRes(computeRes, givenTeachers, givenCourses, givenRooms)
+        return adaptRes(computeRes, slotPosToId)
     }
 
     private fun adaptTeachers(inTeachers: MutableList<Teacher>): List<CoursesMember> {
-        val res = mutableListOf<CoursesMember>()
-
-        inTeachers.forEach {
-            //TODO: как достать все курсы, которые ведет препод?
-            // и почему они не хранятся внутри самого тичера?
-            // реально нужен лонг на айди?
-            val teacherCourses = IntArray(5)
-            var currentTeacher = CoursesMember(it.name, it.id.toInt(), teacherCourses)
-            currentTeacher = adaptTime(it.availableSlots, currentTeacher) as CoursesMember
-            res.add(currentTeacher)
-        }
-        return res
+        return inTeachers.map {teacherEntity ->
+            val courses = teacherEntity.courses.map { it.id.toInt() }.toIntArray()
+            val teacher = CoursesMember(teacherEntity.name, teacherEntity.id.toInt(), courses)
+            adaptTime(teacherEntity.availableSlots, teacher)
+            teacher
+        }.toList()
     }
 
-    private fun adaptTime(inSlots: Set<Slot>, toAlter: Temporal): Temporal {
+    private fun <T: Temporal> adaptTime(inSlots: Set<Slot>, toAlter: T): T {
         inSlots.forEach {
             toAlter.setUnitarySlotValue(Temporal.idToDay(it.day), it.slotRow, true)
         }
@@ -45,17 +44,13 @@ class EngineAdapter {
     }
 
     private fun adaptCourses(inCourses: MutableList<Course>): List<CourseGen> {
-        val res = mutableListOf<CourseGen>()
-
-        inCourses.forEach {
-            val courseGroups = IntArray(5)
-            //TODO: зачем курсу иметь сет из (объектов) групп?
-            // ему достаточно сета айдишников
-            // или я опять не понимаю
-            val currentCourse = CourseGen(it.name, it.id.toInt(), courseGroups)
-            res.add(currentCourse)
-        }
-        return res
+        return inCourses.map {entityCourse ->
+            val groups = entityCourse.groups.map { it.id.toInt() }.toIntArray()
+            val course = CourseGen(entityCourse.name, entityCourse.id.toInt(), groups)
+            course.teacherID = entityCourse.teacher.id.toInt()
+            course.frequency = entityCourse.frequency.toInt()
+            course
+        }.toList()
     }
 
     private fun adaptRooms(inRooms: MutableList<Room>): List<RoomGen> {
@@ -75,8 +70,7 @@ class EngineAdapter {
         val res = mutableListOf<GroupGen>()
 
         inGroups.forEach {
-            val groupCourses = IntArray(5)
-            //TODO: размер группы внутри генератора в байтах (в этом есть смысл)
+            val groupCourses = it.courses.map { course -> course.id.toInt() }.toIntArray()
             var currentGroup = GroupGen(it.name, it.id.toInt(), groupCourses, it.quantity.toInt())
             currentGroup = adaptTime(it.availableSlots, currentGroup) as GroupGen
             res.add(currentGroup)
@@ -86,31 +80,19 @@ class EngineAdapter {
 
     private fun adaptRes(
         inTable: Array<Array<TimetableBuilder.Slot>>,
-        inTeachers: MutableList<Teacher>,
-        inCourses: MutableList<Course>,
-        inRooms: MutableList<Room>
+        slotTable: Map<Int, Map<Int, Long>>,
     ): List<TimetableEntry> {
-        val res = mutableListOf<TimetableEntry>()
-        var nextId: Long = 0
-        for (i in 0..6) {
-            for (j in 0..6) {
-                if (inTable[i][j].courseID == -1) {
-                    continue
-                } else {
-                    //TODO: откуда брать время начала и конца?
-                    // где-то должна быть таблица айди-время
-                    var s: Slot = Slot(i * j.toLong(), 0, 0, j.toByte(), i.toByte())
-                    //TODO: откуда брать группы?
-                    // это все группы, указанные у курса, и на каждую надо новый энтри писать
-                    /*res.add(TimetableEntry(nextId,s,
-                        inTeachers.get(inTable[i][j].teacherID),
-
-                        inCourses.get(inTable[i][j].courseID)
-                        ))*/
-                }
-
+        return inTable.mapIndexed { row, slots ->
+            slots.mapIndexed innerLoop@{ day, slot ->
+                if(slot.teacherID < 0 || slot.roomID < 0 || slot.courseID < 0)return@innerLoop null
+                TimetableEntry(
+                    slot = Slot(id = slotTable[row]!![day]!!),
+                    teacher = Teacher(id = slot.teacherID.toLong()),
+                    group = setOf(), // TODO: save groups
+                    course = Course(id = slot.courseID.toLong()),
+                    room = Room(id = slot.roomID.toLong()),
+                )
             }
-        }
-        return res
+        }.flatten().filterNotNull()
     }
 }

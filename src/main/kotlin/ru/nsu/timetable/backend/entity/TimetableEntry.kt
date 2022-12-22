@@ -5,9 +5,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "timetable")
 class TimetableEntry(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    id: Long = 0,
 
     @ManyToOne
     @JoinColumn(name = "slot")
@@ -17,9 +15,9 @@ class TimetableEntry(
     @JoinColumn(name = "teacher")
     var teacher: Teacher,
 
-    @ManyToOne
-    @JoinColumn(name = "group_")
-    var group: Group,
+    @ManyToMany
+//    @JoinColumn(name = "group_")
+    var group: Set<Group>,
 
     @ManyToOne
     @JoinColumn(name = "course")
@@ -28,4 +26,4 @@ class TimetableEntry(
     @ManyToOne
     @JoinColumn(name = "room")
     var room: Room
-)
+): IdEntity(id)

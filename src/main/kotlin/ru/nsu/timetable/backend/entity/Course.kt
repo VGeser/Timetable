@@ -1,13 +1,14 @@
 package ru.nsu.timetable.backend.entity
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import ru.nsu.timetable.backend.controller.EntitiesToIdsSerializer
+import ru.nsu.timetable.backend.controller.EntityToIdSerializer
 import javax.persistence.*
 
 @Entity
 @Table(name = "courses")
 class Course(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    id: Long = 0,
 
     @Column(name = "name")
     var name: String = "",
@@ -19,6 +20,12 @@ class Course(
     @Column(name = "frequency")
     var frequency: Byte = 1,
 
-    @ManyToMany
-    var groups: Set<Group>
-)
+    @ManyToOne
+    @JoinColumn(name="teacher")
+    @JsonSerialize(using = EntityToIdSerializer::class)
+    var teacher: Teacher = Teacher(),
+): IdEntity(id){
+    @ManyToMany(mappedBy = "courses")
+    @JsonSerialize(using = EntitiesToIdsSerializer::class)
+    var groups: Set<Group> = setOf()
+}

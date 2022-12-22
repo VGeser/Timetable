@@ -5,9 +5,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "slots")
 class Slot(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    id: Long = 0,
 
     @Column(name = "time_start")
     var timeStart: Long = 0,
@@ -21,4 +19,4 @@ class Slot(
 
     @Column(name = "slot_row")
     var slotRow: Byte = 0
-)
+): IdEntity(id)
