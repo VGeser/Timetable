@@ -1,12 +1,45 @@
 package ru.nsu.timetable.backend.generator;
 
+import java.util.Arrays;
+
 public class Temporal extends Named {
 
-    private final boolean[][] table;
+    private final SlotState[][] table;
 
     public Temporal(String name, int ID) {
         super(name, ID);
-        table = new boolean[7][7];
+        table = new SlotState[7][7];
+        for (int i = 0; i < 7; i++) {
+            Arrays.fill(table[i], Temporal.SlotState.Shut);
+        }
+    }
+
+    public static boolean toStrictBoolean(SlotState ss) {
+        return ss == SlotState.Free;
+    }
+
+    public static byte toLooseByte(SlotState ss) {
+        switch (ss) {
+            case Shut:
+                return 3;
+            case Proposed:
+                return 2;
+            case Free:
+                return 1;
+            default:
+                return 0;
+        }
+    }
+
+    public static SlotState fromLooseByte(byte b) {
+        switch (b) {
+            case 1:
+                return SlotState.Free;
+            case 2:
+                return SlotState.Proposed;
+            default:
+                return SlotState.Shut;
+        }
     }
 
     public static Temporal.Day idToDay(byte id) {
@@ -65,19 +98,23 @@ public class Temporal extends Named {
         }
     }
 
-    public void setUnitarySlotValue(Day day, byte slot, boolean value) {
+    public void setUnitarySlotValue(Day day, byte slot, SlotState value) {
         table[slot][defineColumn(day)] = value;
     }
 
-    public boolean getUnitarySlotValue(Day day, byte slot) {
-        return table[slot - 1][defineColumn(day)];
+    public SlotState getUnitarySlotValue(Day day, byte slot) {
+        return table[slot][defineColumn(day)];
     }
 
-    public boolean[][] getTable() {
+    public SlotState[][] getTable() {
         return table;
     }
 
     public enum Day {
         Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday;
+    }
+
+    public enum SlotState {
+        Free, Shut, Proposed;
     }
 }

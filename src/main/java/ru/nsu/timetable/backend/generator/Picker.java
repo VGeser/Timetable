@@ -4,15 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Picker {
     private static List<smallCourse> longerList;
-    private static List<RoomGen> roomList;
 
     public Picker(HashMap<Integer, CourseGen> courses) {
         longerList = new ArrayList<>(courses.size());
         prolong(courses);
+    }
+
+    public void restoreCourse(CourseGen course) {
+        smallCourse sm = new smallCourse(course.getFrequency(), course.getID());
+        longerList.add(sm);
     }
 
     private void prolong(HashMap<Integer, CourseGen> courses) {
@@ -35,19 +38,6 @@ public class Picker {
         }
     }
 
-    public void setCurrentRooms(List<RoomGen> currentRooms, int request, boolean tools) {
-        roomList = currentRooms.stream()
-                .filter(r -> (r.getCapacity() >= request) && (!tools || r.hasTools()))
-                .collect(Collectors.toList());
-    }
-
-    public int getNextRoom() {
-        if (!roomList.isEmpty()) {
-            Collections.shuffle(roomList);
-            return roomList.get(0).getID();
-        } else return -1;
-    }
-
     public void removeCourse() {
         longerList.remove(0);
     }
@@ -55,11 +45,9 @@ public class Picker {
     static class smallCourse {
         final int originalFrequency;
         final int id;
-        int currentFrequency;
 
         smallCourse(int originalFrequency, int id) {
             this.originalFrequency = originalFrequency;
-            this.currentFrequency = originalFrequency;
             this.id = id;
         }
     }

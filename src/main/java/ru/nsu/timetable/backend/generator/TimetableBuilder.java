@@ -1,18 +1,25 @@
 package ru.nsu.timetable.backend.generator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TimetableBuilder {
-    private static final boolean[][] allFalseTable = makeNewFixedTable(false);
-    private static Slot[][] timetable;
+    private static final Temporal.SlotState[][] allFalseTable = makeNewFixedTable(Temporal.SlotState.Shut);
     private final SlotIntersect slotIntersect;
+    private static Slot[][] timetable;
     private final HashMap<Integer, CoursesMember> teacherMap;
     private final HashMap<Integer, GroupGen> groupMap;
     private final HashMap<Integer, CourseGen> coursesMap;
     private final HashMap<Integer, RoomGen> roomMap;
+    private Temporal.SlotState[][] possibleSlotsContainer;
+
+    private static Temporal.SlotState[][] makeNewFixedTable(Temporal.SlotState value) {
+        Temporal.SlotState[][] res = new Temporal.SlotState[7][7];
+        for (int i = 0; i < 7; i++) {
+            Arrays.fill(res[i], value);
+        }
+        return res;
+    }
 
     TimetableBuilder(List<CoursesMember> teachers,
                      List<GroupGen> groups,
@@ -31,20 +38,10 @@ public class TimetableBuilder {
         slotIntersect = new SlotIntersect();
     }
 
-    private static boolean[][] makeNewFixedTable(boolean value) {
-        boolean[][] res = new boolean[7][7];
-        for (int i = 0; i < 7; i++) {
-            Arrays.fill(res[i], value);
-        }
-        return res;
-    }
-
-    //TODO: при добавлении в стек шага, у комнаты закрывать слот!!!!
-
     public Slot[][] generate() {
         Picker picker = new Picker(coursesMap);
-        int slotNumber = getSlotNumber();
-        for (int i = 0; i < slotNumber; i++) {
+        int steps = getSlotNumber();
+        for (int i = 0; i < steps; i++) {
             int curID = picker.getNextCourse();
             CourseGen currentCourse = coursesMap.get(curID);
             int teacherID = currentCourse.getTeacherID();
@@ -58,46 +55,58 @@ public class TimetableBuilder {
             }
 
             // время когда все группы свободны
-            boolean[][] allGrops = makeNewFixedTable(true);
-            for (GroupGen g : curGroups) {
-                allGrops = slotIntersect.getIntersect(allGrops, g.getTable());
+            possibleSlotsContainer = makeNewFixedTable(Temporal.SlotState.Free);
+            if (isLooselyFree(curGroups)) {
+                throw new IllegalArgumentException();
             }
 
             // время пересечения у препода и всех групп на курсе
-            boolean[][] teacherSlot = teacherMap.get(teacherID).getTable();
-            boolean[][] teacherAndGroups = slotIntersect.getIntersect(allGrops, teacherSlot);
+            if (isLooselyFree(Collections.singletonList(teacherMap.get(teacherID)))) {
+                throw new IllegalArgumentException();
+            }
 
             // инициализация списка подходящих комнат,
             // чтобы потом по нему искать свободную
             int studentNumber = getStudentNumber(curGroups);
-            picker.setCurrentRooms(new ArrayList<>(roomMap.values()),
+            List<RoomGen> curRooms = allPossibleRooms(new ArrayList<>(roomMap.values()),
                     studentNumber, currentCourse.doesRequireTools());
-            int curRoomId = picker.getNextRoom();
 
+            int curRoomId;
             // поиск времени, когда пересекаются:
             // все группы + препод + подходящая комната
-            boolean[][] roomsAndPeople = new boolean[7][7];
-            while (curRoomId != -1) {
-                roomsAndPeople = slotIntersect.getIntersect(teacherAndGroups,
-                        roomMap.get(curRoomId).getTable());
-                if (roomsAndPeople != allFalseTable) {
-                    break;
-                }
-                curRoomId = picker.getNextRoom();
+            if ((curRoomId = findRoomLoosely(curRooms)) == -1) {
+                throw new IllegalArgumentException();
             }
 
-            slotIntersect.setPossibleSlots(roomsAndPeople);
-            byte[] vals = slotIntersect.nextPossibleSlot();
-
-            timetable[vals[0]][vals[1]] = new Slot(teacherID, curID, curRoomId);
-            picker.removeCourse();
-            for (GroupGen g : curGroups) {
-                g.setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0], false);
+            byte[] vals;
+            if (slotIntersect.setPossibleSlots(possibleSlotsContainer)) {
+                vals = slotIntersect.nextPossibleSlot();
+            } else {
+                slotIntersect.setDeletableSlots(allProposedSlots(),
+                        curGroups, curRooms, teacherMap.get(teacherID));
+                vals = slotIntersect.minimalDeletableSlot();
+                unpropose(vals, picker);
+                steps++;
             }
-            roomMap.get(curRoomId).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0], false);
-            teacherMap.get(teacherID).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0], false);
+
+            propose(vals, new Slot(teacherID, curID, curRoomId), picker,
+                    curGroups, curRoomId, teacherID);
         }
         return timetable;
+    }
+
+    private void propose(byte[] vals, Slot slot, Picker picker,
+                         List<GroupGen> groups, int roomId, int teacherId) {
+        timetable[vals[0]][vals[1]] = slot;
+        picker.removeCourse();
+        for (GroupGen g : groups) {
+            g.setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
+                    Temporal.SlotState.Proposed);
+        }
+        roomMap.get(roomId).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
+                Temporal.SlotState.Proposed);
+        teacherMap.get(teacherId).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
+                Temporal.SlotState.Proposed);
     }
 
     private int getSlotNumber() {
@@ -140,6 +149,62 @@ public class TimetableBuilder {
             Arrays.fill(timetable[i],
                     new Slot(-1, -1, -1));
         }
+    }
+
+    private boolean isLooselyFree(List<? extends Temporal> list) {
+        for (Temporal t : list) {
+            possibleSlotsContainer = slotIntersect.getLooseIntersect(possibleSlotsContainer,
+                    t.getTable());
+            if (Arrays.deepEquals(possibleSlotsContainer, allFalseTable)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<RoomGen> allPossibleRooms(List<RoomGen> currentRooms, int request, boolean tools) {
+        return currentRooms.stream()
+                .filter(r -> (r.getCapacity() >= request) && (!tools || r.hasTools()))
+                .collect(Collectors.toList());
+    }
+
+    private int findRoomLoosely(List<RoomGen> rooms) {
+        for (RoomGen r : rooms) {
+            possibleSlotsContainer = slotIntersect.getLooseIntersect(possibleSlotsContainer,
+                    r.getTable());
+            if (possibleSlotsContainer != allFalseTable) {
+                return r.getID();
+            }
+        }
+        return -1;
+    }
+
+    private List<byte[]> allProposedSlots() {
+        List<byte[]> res = new Vector<>();
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 7; j++) {
+                if (possibleSlotsContainer[i][j] == Temporal.SlotState.Proposed)
+                    res.add(new byte[]{(byte) i, (byte) j});
+            }
+        }
+        return res;
+    }
+
+    private void unpropose(byte[] vals, Picker picker) {
+        Slot currentSlot = timetable[vals[0]][vals[1]];
+        timetable[vals[0]][vals[1]] = new Slot(-1, -1, -1);
+
+        roomMap.get(currentSlot.roomID).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
+                Temporal.SlotState.Free);
+        teacherMap.get(currentSlot.teacherID).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
+                Temporal.SlotState.Free);
+        int[] groupsIDs = coursesMap.get(currentSlot.courseID).getGroups();
+        for (int groupId : groupsIDs) {
+            groupMap.get(groupId).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
+                    Temporal.SlotState.Free);
+        }
+
+        picker.restoreCourse(coursesMap.get(currentSlot.courseID));
     }
 
     static class Slot {

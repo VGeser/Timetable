@@ -12,7 +12,7 @@ class EngineAdapter {
         val givenGroups = repos.groups.findAll().toMutableList()
         val slotPosToId = mutableMapOf<Int, MutableMap<Int, Long>>()
         givenSlots.forEach {
-            if(slotPosToId[it.slotRow.toInt()] == null)slotPosToId[it.slotRow.toInt()] = mutableMapOf()
+            if (slotPosToId[it.slotRow.toInt()] == null) slotPosToId[it.slotRow.toInt()] = mutableMapOf()
             slotPosToId[it.slotRow.toInt()]!![it.day.toInt()] = it.id
         }
 
@@ -28,7 +28,7 @@ class EngineAdapter {
     }
 
     private fun adaptTeachers(inTeachers: MutableList<Teacher>): List<CoursesMember> {
-        return inTeachers.map {teacherEntity ->
+        return inTeachers.map { teacherEntity ->
             val courses = teacherEntity.courses.map { it.id.toInt() }.toIntArray()
             val teacher = CoursesMember(teacherEntity.name, teacherEntity.id.toInt(), courses)
             adaptTime(teacherEntity.availableSlots, teacher)
@@ -36,15 +36,18 @@ class EngineAdapter {
         }.toList()
     }
 
-    private fun <T: Temporal> adaptTime(inSlots: Set<Slot>, toAlter: T): T {
+    private fun <T : Temporal> adaptTime(inSlots: Set<Slot>, toAlter: T): T {
         inSlots.forEach {
-            toAlter.setUnitarySlotValue(Temporal.idToDay(it.day), it.slotRow, true)
+            toAlter.setUnitarySlotValue(
+                Temporal.idToDay(it.day), it.slotRow,
+                Temporal.SlotState.Free
+            )
         }
         return toAlter
     }
 
     private fun adaptCourses(inCourses: MutableList<Course>): List<CourseGen> {
-        return inCourses.map {entityCourse ->
+        return inCourses.map { entityCourse ->
             val groups = entityCourse.groups.map { it.id.toInt() }.toIntArray()
             val course = CourseGen(entityCourse.name, entityCourse.id.toInt(), groups)
             course.teacherID = entityCourse.teacher.id.toInt()
@@ -84,7 +87,7 @@ class EngineAdapter {
     ): List<TimetableEntry> {
         return inTable.mapIndexed { row, slots ->
             slots.mapIndexed innerLoop@{ day, slot ->
-                if(slot.teacherID < 0 || slot.roomID < 0 || slot.courseID < 0)return@innerLoop null
+                if (slot.teacherID < 0 || slot.roomID < 0 || slot.courseID < 0) return@innerLoop null
                 TimetableEntry(
                     slot = Slot(id = slotTable[row]!![day]!!),
                     teacher = Teacher(id = slot.teacherID.toLong()),

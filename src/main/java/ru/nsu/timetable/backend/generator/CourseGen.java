@@ -1,8 +1,9 @@
 package ru.nsu.timetable.backend.generator;
 
 public class CourseGen extends Named {
-    private final int[] groups;
     private boolean requiresTools;
+
+    private final int[] groups;
     private int frequency;
     private int teacherID;
 

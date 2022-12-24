@@ -1,45 +1,95 @@
 package ru.nsu.timetable.backend.generator;
 
 import java.util.Collections;
-import java.util.Stack;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Vector;
 
 public class SlotIntersect {
 
-    // об эффективности:
-    // 1) 7*7=49 итераций это ничто
-    // 2) выполняется только одно действие, причем элементарное
-    // его легко предсказать и закинуть в конвейер
-    // 3) внутри себя стримы - это те же циклы, а писать их сложнее (ну мне)
+    private List<byte[]> possibleSlots;
+    private List<Deletable> deletableSlots;
 
-    private Stack<byte[]> possibleSlots;
-
-    public boolean[][] getIntersect(boolean[][] slot1, boolean[][] slot2) {
-        boolean[][] res = new boolean[7][7];
+    //proposed == free
+    public Temporal.SlotState[][] getLooseIntersect(Temporal.SlotState[][] slot1, Temporal.SlotState[][] slot2) {
+        Temporal.SlotState[][] res = new Temporal.SlotState[7][7];
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
-                res[i][j] = slot1[i][j] & slot2[i][j];
+                byte s1 = Temporal.toLooseByte(slot1[i][j]);
+                byte s2 = Temporal.toLooseByte(slot2[i][j]);
+                res[i][j] = Temporal.fromLooseByte((byte) Math.max(s1, s2));
             }
         }
         return res;
     }
 
-    public void setPossibleSlots(boolean[][] table) {
-        possibleSlots = new Stack<>();
+    public boolean setPossibleSlots(Temporal.SlotState[][] table) {
+        possibleSlots = new Vector<>();
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
-                if (table[i][j]) {
+                if (Temporal.toStrictBoolean(table[i][j])) {
                     possibleSlots.add(new byte[]{(byte) i, (byte) j});
                 }
             }
         }
+        if (possibleSlots.isEmpty()) return false;
         Collections.shuffle(possibleSlots);
+        return true;
     }
 
     public byte[] nextPossibleSlot() {
         if (!possibleSlots.isEmpty()) {
-            return possibleSlots.pop();
+            return possibleSlots.get(0);
         } else {
             return new byte[]{};
+        }
+    }
+
+    public void setDeletableSlots(List<byte[]> proposedSlots,
+                                  List<GroupGen> groups,
+                                  List<RoomGen> rooms,
+                                  CoursesMember teacher) {
+        deletableSlots = new Vector<>();
+        for (byte[] slot : proposedSlots) {
+            int rating = 0;
+            rating += nextRating(groups, slot[1], slot[0]);
+            rating += nextRating(rooms, slot[1], slot[0]);
+            rating += nextRating(Collections.singletonList(teacher), slot[1], slot[0]);
+            deletableSlots.add(new Deletable(slot, rating));
+        }
+    }
+
+    private int nextRating(List<? extends Temporal> list, byte day, byte row) {
+        int res = 0;
+        for (Temporal t : list
+        ) {
+            if (t.getUnitarySlotValue(Temporal.idToDay(day), row)
+                    == Temporal.SlotState.Proposed) {
+                res++;
+            }
+        }
+        return res;
+    }
+
+    public byte[] minimalDeletableSlot() {
+        deletableSlots.sort(new sortByRank());
+        return deletableSlots.get(0).slot;
+    }
+
+    static class Deletable {
+        byte[] slot;
+        int rank;
+
+        Deletable(byte[] slot, int rank) {
+            this.slot = slot;
+            this.rank = rank;
+        }
+    }
+
+    static class sortByRank implements Comparator<Deletable> {
+        @Override
+        public int compare(Deletable o1, Deletable o2) {
+            return o1.rank - o2.rank;
         }
     }
 }
