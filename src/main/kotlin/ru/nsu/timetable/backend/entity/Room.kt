@@ -1,13 +1,13 @@
 package ru.nsu.timetable.backend.entity
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import ru.nsu.timetable.backend.controller.EntitiesToIdsSerializer
 import javax.persistence.*
 
 @Entity
 @Table(name = "rooms")
 class Room(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    id: Long = 0,
 
     @Column(name = "name")
     var name: String = "",
@@ -20,5 +20,6 @@ class Room(
 
     //slot is present only if its value is true
     @ManyToMany
-    var availableSlots: Set<Slot>
-)
+    @JsonSerialize(using = EntitiesToIdsSerializer::class)
+    var availableSlots: Set<Slot> = setOf(),
+): IdEntity(id)

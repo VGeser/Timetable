@@ -1,13 +1,13 @@
 package ru.nsu.timetable.backend.controller
 
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.JsonSerializer
+import com.fasterxml.jackson.databind.SerializerProvider
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.*
-import ru.nsu.timetable.backend.entity.Course
-import ru.nsu.timetable.backend.entity.Group
-import ru.nsu.timetable.backend.entity.Room
-import ru.nsu.timetable.backend.entity.Teacher
+import ru.nsu.timetable.backend.entity.*
 import ru.nsu.timetable.backend.exceptions.ValidationException
 import ru.nsu.timetable.backend.repo.*
 import kotlin.reflect.KProperty1
@@ -119,7 +119,7 @@ class RoomService(
 }
 
 
-data class CourseDto(val name: String?, val tools: Boolean?, val frequency: Int?)
+data class CourseDto(val name: String?, val tools: Boolean?, val frequency: Int?, val teacher: Long?)
 
 @RequestMapping("/api/v1/courses")
 @SecurityRequirement(name = "token")
@@ -130,6 +130,7 @@ class CourseController(repo: CourseRepository, service: CourseService) :
 @Service
 class CourseService(
     private val repo: CourseRepository,
+    private val teachers: TeacherRepository,
 ) : CrudService<CourseDto, CourseDto>() {
     override fun create(dto: CourseDto): Long {
         validateNulls(dto)
@@ -138,7 +139,7 @@ class CourseService(
                 name = dto.name!!,
                 tools = dto.tools!!,
                 frequency = dto.frequency!!.toByte(),
-                groups = emptySet()
+                teacher = teachers.getReferenceById(dto.teacher!!)
             )
         ).id
     }
@@ -148,6 +149,7 @@ class CourseService(
         dto.name?.let { course.name = it }
         dto.tools?.let { course.tools = it }
         dto.frequency?.let { course.frequency = it.toByte() }
+        dto.teacher?.let { course.teacher = teachers.getReferenceById(it) }
         repo.save(course)
     }
 }
@@ -158,8 +160,8 @@ data class GroupDto(val name: String?, val quantity: Long?, val availableSlots: 
 @RequestMapping("/api/v1/groups")
 @SecurityRequirement(name = "token")
 @RestController
-class GroupController(repo: RoomRepository, service: GroupService) :
-    CrudController<Room, GroupDto, GroupDto>(repo, service)
+class GroupController(repo: GroupRepository, service: GroupService) :
+    CrudController<Group, GroupDto, GroupDto>(repo, service)
 
 @Service
 class GroupService(
@@ -175,7 +177,10 @@ class GroupService(
                 quantity = dto.quantity!!.toByte(),
                 availableSlots = slotRepo.slotSet(dto.availableSlots!!),
                 courses = courseRepo.findAllById(dto.courses!!).toSet()
-            )
+            ).also {
+                println(it.courses)
+            }
+
         ).id
     }
 
@@ -186,5 +191,17 @@ class GroupService(
         dto.availableSlots?.let { group.availableSlots = slotRepo.slotSet(it) }
         dto.courses?.let { group.courses = courseRepo.findAllById(it).toSet() }
         repo.save(group)
+    }
+}
+
+class EntitiesToIdsSerializer: JsonSerializer<Collection<IdEntity>>(){
+    override fun serialize(value: Collection<IdEntity>, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeArray(value.map { it.id }.toLongArray(), 0, value.size)
+    }
+}
+
+class EntityToIdSerializer: JsonSerializer<IdEntity>(){
+    override fun serialize(value: IdEntity, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeNumber(value.id)
     }
 }
