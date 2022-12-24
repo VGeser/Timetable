@@ -17,9 +17,9 @@ class Group(
 
     @ManyToMany
     @JsonSerialize(using = EntitiesToIdsSerializer::class)
-    var availableSlots: Set<Slot>,
+    var availableSlots: Set<Slot> = setOf(),
 
     @ManyToMany
     @JsonSerialize(using = EntitiesToIdsSerializer::class)
-    var courses: Set<Course>
+    var courses: Set<Course> = setOf(),
 ): IdEntity(id)

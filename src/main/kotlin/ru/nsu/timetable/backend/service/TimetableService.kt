@@ -1,21 +1,15 @@
 package ru.nsu.timetable.backend.service
 
 import org.springframework.stereotype.Service
+import ru.nsu.timetable.backend.entity.Group
 import ru.nsu.timetable.backend.entity.Slot
+import ru.nsu.timetable.backend.entity.Teacher
 import ru.nsu.timetable.backend.entity.TimetableEntry
 import ru.nsu.timetable.backend.generator.EngineAdapter
 import ru.nsu.timetable.backend.repo.*
 
 
-@Service
-class RepoProvider(
-    val slots: SlotRepository,
-    val teachers: TeacherRepository,
-    val courses: CourseRepository,
-    val rooms: RoomRepository,
-    val groups: GroupRepository,
-    val table: TimeTableRepository,
-)
+
 
 
 @Service
@@ -30,6 +24,13 @@ class TimetableService(private val repos: RepoProvider) {
         }catch (e: NullPointerException){
             println("fuck")
         }
+    }
 
+    fun getGroupTimetable(group:Group): List<TimetableEntry>{
+        return repos.table.findAllByGroup(group)
+    }
+
+    fun getTeacherTimetable(teacher: Teacher): List<TimetableEntry>{
+        return repos.table.findAllByTeacher(teacher)
     }
 }
