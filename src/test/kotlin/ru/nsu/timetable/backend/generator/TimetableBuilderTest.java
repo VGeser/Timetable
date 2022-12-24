@@ -1,5 +1,6 @@
 package ru.nsu.timetable.backend.generator;
 
+import nsu.ru.fit.software_design.CourseGen;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -346,7 +347,7 @@ class TimetableBuilderTest {
         CourseGen c2 = new CourseGen("sOfTwArE dEsIgN", 552, new int[]{30, 40});
         c2.setTeacherID(777);
         c2.setTools(true);
-        c2.setFrequency(3);
+        c2.setFrequency(2);
 
         CourseGen c3 = new CourseGen("Team Project", 383, new int[]{30, 50});
         c3.setTeacherID(555);
@@ -362,7 +363,7 @@ class TimetableBuilderTest {
         CourseGen c5 = new CourseGen("History", 400, new int[]{50});
         c5.setTeacherID(313);
         c5.setTools(true);
-        c5.setFrequency(2);
+        c5.setFrequency(1);
 
         CourseGen c6 = new CourseGen("Law", 1414, new int[]{60});
         c6.setTeacherID(313);
@@ -372,7 +373,7 @@ class TimetableBuilderTest {
         CourseGen c7 = new CourseGen("Statistics", 9009, new int[]{40, 50});
         c7.setTeacherID(42);
         c7.setTools(false);
-        c7.setFrequency(2);
+        c7.setFrequency(1);
 
         CourseGen c8 = new CourseGen("Machine Learning", 755, new int[]{10, 60});
         c8.setTeacherID(42);
