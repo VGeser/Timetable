@@ -45,17 +45,18 @@ public class SlotIntersect {
         }
     }
 
-    public void setDeletableSlots(List<byte[]> proposedSlots,
+    public void setDeletableSlots(List<SlotIntersect.SlotWithIndex> proposedSlots,
                                   List<GroupGen> groups,
                                   List<RoomGen> rooms,
                                   CoursesMember teacher) {
         deletableSlots = new Vector<>();
-        for (byte[] slot : proposedSlots) {
+        for (SlotWithIndex swi : proposedSlots) {
+            byte[] slot = swi.slot;
             int rating = 0;
             rating += nextRating(groups, slot[1], slot[0]);
             rating += nextRating(rooms, slot[1], slot[0]);
             rating += nextRating(Collections.singletonList(teacher), slot[1], slot[0]);
-            deletableSlots.add(new Deletable(slot, rating));
+            deletableSlots.add(new Deletable(swi, rating));
         }
     }
 
@@ -71,17 +72,27 @@ public class SlotIntersect {
         return res;
     }
 
-    public byte[] minimalDeletableSlot() {
+    public SlotWithIndex minimalDeletableSlot() {
         deletableSlots.sort(new sortByRank());
-        return deletableSlots.get(0).slot;
+        return deletableSlots.get(0).slotWithIndex;
+    }
+
+    static class SlotWithIndex {
+        byte[] slot;
+        int index;
+
+        SlotWithIndex(byte[] slot, int index) {
+            this.slot = slot;
+            this.index = index;
+        }
     }
 
     static class Deletable {
-        byte[] slot;
+        SlotWithIndex slotWithIndex;
         int rank;
 
-        Deletable(byte[] slot, int rank) {
-            this.slot = slot;
+        Deletable(SlotWithIndex slotWithIndex, int rank) {
+            this.slotWithIndex = slotWithIndex;
             this.rank = rank;
         }
     }

@@ -1,6 +1,5 @@
 package ru.nsu.timetable.backend.generator;
 
-import nsu.ru.fit.software_design.CourseGen;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -85,8 +84,8 @@ class TimetableBuilderTest {
         }
 
         TimetableBuilder tb = new TimetableBuilder(teachers, groups, courses, rooms);
-        TimetableBuilder.Slot[][] res = tb.generate();
-        TimetableBuilder.Slot[][] empty = new TimetableBuilder.Slot[7][7];
+        TimetableBuilder.SlotWrapper[][] res = tb.generate();
+        TimetableBuilder.SlotWrapper[][] empty = new TimetableBuilder.SlotWrapper[7][7];
         assertFalse(Arrays.deepEquals(res, empty));
     }
 
@@ -181,8 +180,8 @@ class TimetableBuilderTest {
             }
         }
         TimetableBuilder tb = new TimetableBuilder(teachers, groups, courses, rooms);
-        TimetableBuilder.Slot[][] res = tb.generate();
-        TimetableBuilder.Slot[][] empty = new TimetableBuilder.Slot[7][7];
+        TimetableBuilder.SlotWrapper[][] res = tb.generate();
+        TimetableBuilder.SlotWrapper[][] empty = new TimetableBuilder.SlotWrapper[7][7];
         assertFalse(Arrays.deepEquals(res, empty));
     }
 
@@ -270,8 +269,8 @@ class TimetableBuilderTest {
             }
         }
         TimetableBuilder tb = new TimetableBuilder(teachers, groups, courses, rooms);
-        TimetableBuilder.Slot[][] res = tb.generate();
-        TimetableBuilder.Slot[][] empty = new TimetableBuilder.Slot[7][7];
+        TimetableBuilder.SlotWrapper[][] res = tb.generate();
+        TimetableBuilder.SlotWrapper[][] empty = new TimetableBuilder.SlotWrapper[7][7];
         assertFalse(Arrays.deepEquals(res, empty));
     }
 
@@ -311,24 +310,24 @@ class TimetableBuilderTest {
         t1.setUnitarySlotValue(Temporal.Day.Friday, (byte) 0, Temporal.SlotState.Free);
         t1.setUnitarySlotValue(Temporal.Day.Friday, (byte) 5, Temporal.SlotState.Free);
 
-        CoursesMember t2 = new CoursesMember("Vlasov", 555, new int[]{998});
+        CoursesMember t2 = new CoursesMember("Vlasov", 555, new int[]{383});
         t2.setUnitarySlotValue(Temporal.Day.Saturday, (byte) 3, Temporal.SlotState.Free);
 
-        CoursesMember t3 = new CoursesMember("Miginsky", 313, new int[]{919, 513, 450});
+        CoursesMember t3 = new CoursesMember("Miginsky", 313, new int[]{222, 400, 1414});
         t3.setUnitarySlotValue(Temporal.Day.Monday, (byte) 0, Temporal.SlotState.Free);
         t3.setUnitarySlotValue(Temporal.Day.Monday, (byte) 1, Temporal.SlotState.Free);
         t3.setUnitarySlotValue(Temporal.Day.Wednesday, (byte) 1, Temporal.SlotState.Free);
         t3.setUnitarySlotValue(Temporal.Day.Friday, (byte) 0, Temporal.SlotState.Free);
         t3.setUnitarySlotValue(Temporal.Day.Saturday, (byte) 1, Temporal.SlotState.Free);
 
-        CoursesMember t4 = new CoursesMember("Postovalov", 42, new int[]{655, 244});
+        CoursesMember t4 = new CoursesMember("Postovalov", 42, new int[]{9009, 755});
         t4.setUnitarySlotValue(Temporal.Day.Tuesday, (byte) 2, Temporal.SlotState.Free);
         t4.setUnitarySlotValue(Temporal.Day.Wednesday, (byte) 2, Temporal.SlotState.Free);
         t4.setUnitarySlotValue(Temporal.Day.Thursday, (byte) 4, Temporal.SlotState.Free);
         t4.setUnitarySlotValue(Temporal.Day.Friday, (byte) 4, Temporal.SlotState.Free);
         t4.setUnitarySlotValue(Temporal.Day.Saturday, (byte) 4, Temporal.SlotState.Free);
 
-        CoursesMember t5 = new CoursesMember("Zlygostev", 117, new int[]{807});
+        CoursesMember t5 = new CoursesMember("Zlygostev", 117, new int[]{3750});
         t5.setUnitarySlotValue(Temporal.Day.Monday, (byte) 0, Temporal.SlotState.Free);
         t5.setUnitarySlotValue(Temporal.Day.Friday, (byte) 2, Temporal.SlotState.Free);
 
@@ -467,8 +466,8 @@ class TimetableBuilderTest {
         rooms.add(r4);
 
         TimetableBuilder tb = new TimetableBuilder(teachers, groups, courses, rooms);
-        TimetableBuilder.Slot[][] res = tb.generate();
-        TimetableBuilder.Slot[][] empty = new TimetableBuilder.Slot[7][7];
+        TimetableBuilder.SlotWrapper[][] res = tb.generate();
+        TimetableBuilder.SlotWrapper[][] empty = new TimetableBuilder.SlotWrapper[7][7];
         assertFalse(Arrays.deepEquals(res, empty));
     }
 
@@ -493,7 +492,7 @@ class TimetableBuilderTest {
         teachers.add(t1);
         teachers.add(t2);
 
-        CourseGen c1 = new CourseGen("OS", 101, new int[]{10, 20});
+        CourseGen c1 = new CourseGen("OS", 101, new int[]{20});
         c1.setTeacherID(777);
         c1.setTools(false);
         c1.setFrequency(2);
@@ -515,7 +514,7 @@ class TimetableBuilderTest {
 
         List<GroupGen> groups = new Vector<>();
         groups.add(new GroupGen("20213", 10,
-                new int[]{101, 200, 31}, 13));
+                new int[]{200, 31}, 13));
         groups.add(new GroupGen("20215", 20,
                 new int[]{101, 200}, 50));
         for (GroupGen g : groups) {
@@ -529,7 +528,7 @@ class TimetableBuilderTest {
         RoomGen r1 = new RoomGen("1154", 1, 13, true);
         r1.setUnitarySlotValue(Temporal.Day.Tuesday, (byte) 0, Temporal.SlotState.Free);
         r1.setUnitarySlotValue(Temporal.Day.Wednesday, (byte) 1, Temporal.SlotState.Free);
-        r1.setUnitarySlotValue(Temporal.Day.Thursday, (byte) 2, Temporal.SlotState.Free);
+        // r1.setUnitarySlotValue(Temporal.Day.Thursday, (byte) 2, Temporal.SlotState.Free);
 
         RoomGen r2 = new RoomGen("2128", 2, 100, true);
         r2.setUnitarySlotValue(Temporal.Day.Tuesday, (byte) 0, Temporal.SlotState.Free);
@@ -541,8 +540,8 @@ class TimetableBuilderTest {
         rooms.add(r2);
 
         TimetableBuilder tb = new TimetableBuilder(teachers, groups, courses, rooms);
-        TimetableBuilder.Slot[][] res = tb.generate();
-        TimetableBuilder.Slot[][] empty = new TimetableBuilder.Slot[7][7];
+        TimetableBuilder.SlotWrapper[][] res = tb.generate();
+        TimetableBuilder.SlotWrapper[][] empty = new TimetableBuilder.SlotWrapper[7][7];
         assertFalse(Arrays.deepEquals(res, empty));
     }
 }
