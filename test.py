@@ -93,3 +93,11 @@ for e in s.get(base + '/groups').json():
     json = s.get(base + f'/table/group/{i}').json()
     draw_table(json)
     print()
+
+for e in s.get(base + '/rooms').json():
+    name = e['name']
+    i = e['id']
+    print(name)
+    json = s.get(base + f'/table/room/{i}').json()
+    draw_table(json)
+    print()

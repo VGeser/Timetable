@@ -17,6 +17,7 @@ interface TimeTableRepository: JpaRepository<TimetableEntry, Long>{
     fun findAllByTeacher(teacher: Teacher): List<TimetableEntry>
     @Query("select t from TimetableEntry t where ?1 member  of t.group")
     fun findAllByGroup(group: Group): List<TimetableEntry>
+    fun findAllByRoom(room: Room): List<TimetableEntry>
 }
 
 

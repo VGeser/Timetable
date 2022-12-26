@@ -31,6 +31,11 @@ class TimetableController(
         return tableToDto(tableService.getGroupTimetable(repos.groups.getReferenceById(id)))
     }
 
+    @GetMapping("room/{id}")
+    fun getRoom(@PathVariable id: Long): TimetableDto{
+        return tableToDto(tableService.getRoomTimetable(repos.rooms.getReferenceById(id)))
+    }
+
     private fun tableToDto(table: List<TimetableEntry>): TimetableDto {
         // TODO: do not hardcode size
         val res: TimetableDto = Array(7) {Array(7) {null} }
