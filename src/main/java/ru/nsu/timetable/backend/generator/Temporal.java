@@ -18,6 +18,10 @@ public class Temporal extends Named {
         return ss == SlotState.Free;
     }
 
+    public static boolean toLooseBoolean(SlotState ss) {
+        return ss == SlotState.Free || ss == SlotState.Proposed;
+    }
+
     public static byte toLooseByte(SlotState ss) {
         switch (ss) {
             case Shut:

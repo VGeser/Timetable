@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 public class TimetableBuilder {
     private static final Temporal.SlotState[][] allFalseTable = makeNewFixedTable(Temporal.SlotState.Shut);
     private final SlotIntersect slotIntersect;
-    private static Slot[][] timetable;
+    private static SlotWrapper[][] timetable;
     private final HashMap<Integer, CoursesMember> teacherMap;
     private final HashMap<Integer, GroupGen> groupMap;
     private final HashMap<Integer, CourseGen> coursesMap;
@@ -32,13 +32,13 @@ public class TimetableBuilder {
         roomMap = new HashMap<>();
 
         makeHashMaps(teachers, groups, courses, rooms);
-        timetable = new Slot[7][7];
+        timetable = new SlotWrapper[7][7];
         makeEmptyTimetable();
 
         slotIntersect = new SlotIntersect();
     }
 
-    public Slot[][] generate() {
+    public SlotWrapper[][] generate() {
         Picker picker = new Picker(coursesMap);
         int steps = getSlotNumber();
         for (int i = 0; i < steps; i++) {
@@ -82,11 +82,16 @@ public class TimetableBuilder {
             if (slotIntersect.setPossibleSlots(possibleSlotsContainer)) {
                 vals = slotIntersect.nextPossibleSlot();
             } else {
-                slotIntersect.setDeletableSlots(allProposedSlots(),
+                List<byte[]> currentProposed = allProposedSlots(curRoomId, teacherID, curGroups);
+                List<SlotIntersect.SlotWithIndex> indexed = findSlotsIndexes(
+                        currentProposed, curID, curRoomId, teacherID
+                );
+                slotIntersect.setDeletableSlots(indexed,
                         curGroups, curRooms, teacherMap.get(teacherID));
-                vals = slotIntersect.minimalDeletableSlot();
-                unpropose(vals, picker);
+                SlotIntersect.SlotWithIndex valsInd = slotIntersect.minimalDeletableSlot();
+                unpropose(valsInd.slot, valsInd.index, picker);
                 steps++;
+                vals = valsInd.slot;
             }
 
             propose(vals, new Slot(teacherID, curID, curRoomId), picker,
@@ -97,7 +102,7 @@ public class TimetableBuilder {
 
     private void propose(byte[] vals, Slot slot, Picker picker,
                          List<GroupGen> groups, int roomId, int teacherId) {
-        timetable[vals[0]][vals[1]] = slot;
+        timetable[vals[0]][vals[1]].slotList.add(slot);
         picker.removeCourse();
         for (GroupGen g : groups) {
             g.setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
@@ -146,8 +151,9 @@ public class TimetableBuilder {
 
     private void makeEmptyTimetable() {
         for (int i = 0; i < 7; i++) {
-            Arrays.fill(timetable[i],
-                    new Slot(-1, -1, -1));
+            for (int j = 0; j < 7; j++) {
+                timetable[i][j] = new SlotWrapper();
+            }
         }
     }
 
@@ -179,20 +185,31 @@ public class TimetableBuilder {
         return -1;
     }
 
-    private List<byte[]> allProposedSlots() {
+    private List<byte[]> allProposedSlots(int roomID, int teacherID, List<GroupGen> groups) {
         List<byte[]> res = new Vector<>();
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
-                if (possibleSlotsContainer[i][j] == Temporal.SlotState.Proposed)
+                if (isProposedForMe(new byte[]{(byte) i, (byte) j}, roomID, teacherID, groups))
                     res.add(new byte[]{(byte) i, (byte) j});
             }
         }
         return res;
     }
 
-    private void unpropose(byte[] vals, Picker picker) {
-        Slot currentSlot = timetable[vals[0]][vals[1]];
-        timetable[vals[0]][vals[1]] = new Slot(-1, -1, -1);
+    private boolean isProposedForMe(byte[] vals, int roomID, int teacherID, List<GroupGen> groups) {
+        for (GroupGen g : groups) {
+            if (g.getUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0]) == Temporal.SlotState.Proposed)
+                return true;
+        }
+        return roomMap.get(roomID).getUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0])
+                == Temporal.SlotState.Proposed ||
+                teacherMap.get(teacherID).getUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0])
+                        == Temporal.SlotState.Proposed;
+    }
+
+    private void unpropose(byte[] vals, int index, Picker picker) {
+        Slot currentSlot = timetable[vals[0]][vals[1]].slotList.get(index);
+        timetable[vals[0]][vals[1]].slotList.remove(index);
 
         roomMap.get(currentSlot.roomID).setUnitarySlotValue(Temporal.idToDay(vals[1]), vals[0],
                 Temporal.SlotState.Free);
@@ -207,6 +224,26 @@ public class TimetableBuilder {
         picker.restoreCourse(coursesMap.get(currentSlot.courseID));
     }
 
+    private List<SlotIntersect.SlotWithIndex> findSlotsIndexes(List<byte[]> plainSlots,
+                                                               int courseID,
+                                                               int roomID,
+                                                               int teacherID) {
+        List<SlotIntersect.SlotWithIndex> res = new Vector<>();
+        for (byte[] plainSlot : plainSlots) {
+            int index = -5;
+            Slot curSlot = new Slot(teacherID, courseID, roomID);
+            for (Slot slot :
+                    timetable[plainSlot[0]][plainSlot[1]].slotList) {
+                if (slot.equals(curSlot)) {
+                    index = timetable[plainSlot[0]][plainSlot[1]].slotList.indexOf(slot);
+                    break;
+                } //throw new IllegalStateException();
+            }
+            res.add(new SlotIntersect.SlotWithIndex(plainSlot, index));
+        }
+        return res;
+    }
+
     static class Slot {
         int teacherID;
         int courseID;
@@ -217,6 +254,21 @@ public class TimetableBuilder {
             this.teacherID = teacherID;
             this.courseID = courseID;
             this.roomID = roomID;
+        }
+
+        public boolean equals(Slot s) {
+            return ((this.teacherID == s.teacherID) ||
+                    (this.courseID == s.courseID) ||
+                    (this.roomID == s.roomID)
+            );
+        }
+    }
+
+    static class SlotWrapper {
+        List<Slot> slotList;
+
+        SlotWrapper() {
+            slotList = new ArrayList<>();
         }
     }
 }
