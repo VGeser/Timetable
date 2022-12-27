@@ -35,20 +35,17 @@ def add_group(name: str, quantity: int, availableSlots: list[int], courses: list
 
 if len(s.get(base + '/teachers').json()) == 0:
 
-    t1 = add_teacher("Vlasov", [1,2,3,       8,9,10, 17])
-    t2 = add_teacher("irtegov", [1,2,3, 8, 9, 10,   15, 16, 17])
-    # t3 = add_teacher('Oparin', [9])
-
-    os = add_course('OS', False, 2, t2)
-    jaba = add_course('Jaba', True, 1, t1)
-    pac = add_course('PAC', False, 2, t1)
-    # fizra = add_course('PE', False, 1, t3)
-
-    add_room("small", 13, False, [1, 9, 17])
-    add_room("big", 100, True, [1, 2, 3])
-    # add_room("Outside", 100, False, [9])
-
-    add_group("20213", 13, [1,2,3,8,9,10,15,16,17], [os, jaba, pac])
+    t1 = add_teacher("Vlasov", [1,2,3, 8,9,10]) 
+    t2 = add_teacher("irtegov", [1,2,3, 9, 10, 15, 16, 17]) 
+    
+    os = add_course('OS', False, 2, t2) 
+    jaba = add_course('Jaba', True, 1, t1) 
+    pac = add_course('PAC', True, 2, t1) 
+    
+    add_room("small", 13, True, [1, 9]) 
+    add_room("big", 100, True, [1, 2, 3]) 
+    
+    add_group("20213", 13, [1,2,3,8,9,10,15,16,17], [ jaba, pac]) 
     add_group("20215", 50, [1,2,3,8,9,10,15,16,17], [os, jaba])
 
 res = s.post(base + "/table/generate")
@@ -91,5 +88,13 @@ for e in s.get(base + '/groups').json():
     i = e['id']
     print(name)
     json = s.get(base + f'/table/group/{i}').json()
+    draw_table(json)
+    print()
+
+for e in s.get(base + '/rooms').json():
+    name = e['name']
+    i = e['id']
+    print(name)
+    json = s.get(base + f'/table/room/{i}').json()
     draw_table(json)
     print()

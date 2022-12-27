@@ -6,7 +6,8 @@ import org.springframework.stereotype.Service
 import ru.nsu.timetable.backend.entity.*
 
 interface SlotRepository: JpaRepository<Slot, Long>
-fun SlotRepository.slotSet(ids: List<Long>): Set<Slot> = findAllById(ids).toSet()
+// 'Cause immutable set breaks JPA for some reason
+fun SlotRepository.slotSet(ids: List<Long>): Set<Slot> = findAllById(ids).toMutableSet()
 
 
 interface CourseRepository: JpaRepository<Course, Long>
@@ -17,6 +18,7 @@ interface TimeTableRepository: JpaRepository<TimetableEntry, Long>{
     fun findAllByTeacher(teacher: Teacher): List<TimetableEntry>
     @Query("select t from TimetableEntry t where ?1 member  of t.group")
     fun findAllByGroup(group: Group): List<TimetableEntry>
+    fun findAllByRoom(room: Room): List<TimetableEntry>
 }
 
 
