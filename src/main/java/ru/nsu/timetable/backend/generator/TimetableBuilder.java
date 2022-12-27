@@ -1,6 +1,7 @@
 package ru.nsu.timetable.backend.generator;
 
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class TimetableBuilder {
@@ -42,6 +43,9 @@ public class TimetableBuilder {
         Picker picker = new Picker(coursesMap);
         int steps = getSlotNumber();
         for (int i = 0; i < steps; i++) {
+            if(steps > 999999){
+                throw new RuntimeException("Something went horribly wrong");
+            }
             int curID = picker.getNextCourse();
             CourseGen currentCourse = coursesMap.get(curID);
             int teacherID = currentCourse.getTeacherID();

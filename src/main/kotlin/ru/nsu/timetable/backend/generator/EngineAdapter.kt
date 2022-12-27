@@ -82,22 +82,24 @@ class EngineAdapter {
     }
 
     private fun adaptRes(
-        inTable: Array<Array<TimetableBuilder.Slot>>,
+        inTable: Array<Array<TimetableBuilder.SlotWrapper>>,
         slotTable: Map<Int, Map<Int, Long>>,
         givenCourse: List<Course>
     ): List<TimetableEntry> {
         val courseMap = givenCourse.map { it.id to it }.toMap()
         return inTable.mapIndexed { row, slots ->
-            slots.mapIndexed innerLoop@{ day, slot ->
-                if (slot.teacherID < 0 || slot.roomID < 0 || slot.courseID < 0) return@innerLoop null
-                TimetableEntry(
-                    slot = Slot(id = slotTable[row]!![day]!!),
-                    teacher = Teacher(id = slot.teacherID.toLong()),
-                    group = courseMap[slot.courseID.toLong()]?.groups?.map { Group(id = it.id) }?.toSet() ?: setOf(),
-                    course = Course(id = slot.courseID.toLong()),
-                    room = Room(id = slot.roomID.toLong()),
-                )
+            slots.mapIndexed innerLoop@{ day, slotWrapper ->
+                slotWrapper.slotList.map { slot ->
+                    TimetableEntry(
+                        slot = Slot(id = slotTable[row]!![day]!!),
+                        teacher = Teacher(id = slot.teacherID.toLong()),
+                        group = courseMap[slot.courseID.toLong()]?.groups?.map { Group(id = it.id) }?.toSet() ?: setOf(),
+                        course = Course(id = slot.courseID.toLong()),
+                        room = Room(id = slot.roomID.toLong()),
+                    )
+                }
+
             }
-        }.flatten().filterNotNull()
+        }.flatten().flatten()
     }
 }
