@@ -17,16 +17,15 @@ class SlotService(
         if(repo.count() != 0L){
             return
         }
-        for(day in 0 until 7){
-            var time: Long = 9*60 + 0
-            for(slotNum in 0 until SLOTS_PER_DAY){
+        for(slotNum in 0 until 7){
+            val time: Long = 9*60 + 0
+            for(day in 0 until SLOTS_PER_DAY){
                 repo.save(Slot(
-                    timeStart = time,
-                    timeEnd = time + SLOT_DURATION,
+                    timeStart = time +  (SLOT_DURATION + SLOT_BREAK) * slotNum,
+                    timeEnd = time + (SLOT_DURATION + SLOT_BREAK) * (slotNum+1) - SLOT_BREAK,
                     day = day.toByte(),
                     slotRow = slotNum.toByte(),
                 ))
-                time += SLOT_DURATION + SLOT_BREAK
             }
         }
     }

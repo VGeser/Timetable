@@ -6,7 +6,8 @@ import org.springframework.stereotype.Service
 import ru.nsu.timetable.backend.entity.*
 
 interface SlotRepository: JpaRepository<Slot, Long>
-fun SlotRepository.slotSet(ids: List<Long>): Set<Slot> = findAllById(ids).toSet()
+// 'Cause immutable set breaks JPA for some reason
+fun SlotRepository.slotSet(ids: List<Long>): Set<Slot> = findAllById(ids).toMutableSet()
 
 
 interface CourseRepository: JpaRepository<Course, Long>
