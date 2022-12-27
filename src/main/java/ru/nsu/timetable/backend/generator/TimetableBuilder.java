@@ -1,7 +1,6 @@
 package ru.nsu.timetable.backend.generator;
 
 import java.util.*;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class TimetableBuilder {
@@ -83,12 +82,23 @@ public class TimetableBuilder {
             }
 
             byte[] vals;
-            if (slotIntersect.setPossibleSlots(possibleSlotsContainer)) {
-                vals = slotIntersect.nextPossibleSlot();
-            } else {
-                List<byte[]> currentProposed = allProposedSlots(curRoomId, teacherID, curGroups);
+            int prevRoomID = curRoomId;
+
+            while (curRoomId != -1) {
+                if (slotIntersect.setPossibleSlots(possibleSlotsContainer)) {
+                    vals = slotIntersect.nextPossibleSlot();
+                    propose(vals, new Slot(teacherID, curID, curRoomId), picker,
+                            curGroups, prevRoomID, teacherID);
+                    break;
+                }
+                curRooms.remove(0);
+                prevRoomID = curRoomId;
+                curRoomId = findRoomLoosely(curRooms);
+            }
+            if (curRoomId == -1) {
+                List<byte[]> currentProposed = allProposedSlots(prevRoomID, teacherID, curGroups);
                 List<SlotIntersect.SlotWithIndex> indexed = findSlotsIndexes(
-                        currentProposed, curID, curRoomId, teacherID
+                        currentProposed, curID, prevRoomID, teacherID
                 );
                 slotIntersect.setDeletableSlots(indexed,
                         curGroups, curRooms, teacherMap.get(teacherID));
@@ -96,10 +106,9 @@ public class TimetableBuilder {
                 unpropose(valsInd.slot, valsInd.index, picker);
                 steps++;
                 vals = valsInd.slot;
+                propose(vals, new Slot(teacherID, curID, curRoomId), picker,
+                        curGroups, prevRoomID, teacherID);
             }
-
-            propose(vals, new Slot(teacherID, curID, curRoomId), picker,
-                    curGroups, curRoomId, teacherID);
         }
         return timetable;
     }
