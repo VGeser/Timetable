@@ -26,6 +26,7 @@ class SecurityConfig(private val jwtTokenProvider: JwtTokenProvider): WebSecurit
             .antMatchers("/api/docs").permitAll()
             .antMatchers("/api/docs/swagger-config").permitAll()
             .antMatchers("/swagger/**").permitAll()
+            .antMatchers("/api/v1/dropdb").permitAll()
             .anyRequest().authenticated()
             .and()
             .apply<SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity>>(JwtConfigurer(jwtTokenProvider))
