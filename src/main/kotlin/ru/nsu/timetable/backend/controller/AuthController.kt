@@ -6,8 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -19,7 +17,7 @@ import ru.nsu.timetable.backend.dto.auth.LoginRequestDto
 import ru.nsu.timetable.backend.dto.auth.LoginResponseDto
 import ru.nsu.timetable.backend.dto.auth.RegisterUserDto
 import ru.nsu.timetable.backend.entity.User
-import ru.nsu.timetable.backend.exceptions.InvalidLoginOrPasswordException
+import ru.nsu.timetable.backend.exceptions.UnauthorizedException
 import ru.nsu.timetable.backend.security.jwt.JwtTokenProvider
 import ru.nsu.timetable.backend.service.UserService
 
@@ -53,7 +51,7 @@ class AuthController(
     )
     fun loginUser(@RequestBody request: LoginRequestDto): LoginResponseDto {
         val user = userService.findByUsernameAndPassword(request.username, request.password)
-            ?: throw InvalidLoginOrPasswordException()
+            ?: throw UnauthorizedException("Invalid username or password")
         val (token, _) = tokenProvider.createToken(username = user.username, role = user.role)
         return LoginResponseDto(
             username = user.username,
