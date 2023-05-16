@@ -6,6 +6,8 @@ import io.swagger.v3.oas.models.Components
 
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.security.SecurityRequirement
+import io.swagger.v3.oas.models.tags.Tag
+import org.springdoc.core.customizers.OpenApiCustomizer
 //import io.swagger.v3.oas.models.security.SecurityScheme
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -19,23 +21,11 @@ import org.springframework.context.annotation.Configuration
     scheme = "bearer"
 )
 class OpenApiConfig  {
-//    @Bean
-//    fun customizeOpenAPI(): OpenAPI {
-//        val securitySchemeName = "token"
-//        return OpenAPI()
-//            .addSecurityItem(
-//                SecurityRequirement()
-//                    .addList(securitySchemeName)
-//            )
-//            .components(
-//                Components()
-//                    .addSecuritySchemes(
-//                        securitySchemeName, SecurityScheme()
-//                            .name(securitySchemeName)
-//                            .type(SecurityScheme.Type.HTTP)
-//                            .scheme("bearer")
-//                            .bearerFormat("JWT")
-//                    )
-//            )
-//    }
+    @Bean
+    fun customizeOpenAPI(): OpenApiCustomizer {
+        return OpenApiCustomizer { openApi ->
+            val tags = openApi.paths.values.map { it.readOperations().map { op -> op.tags }.flatten() }.flatten().toSet()
+            openApi.tags = tags.map { Tag().name(it) }
+        }
+    }
 }

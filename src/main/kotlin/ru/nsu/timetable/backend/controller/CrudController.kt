@@ -3,7 +3,18 @@ package ru.nsu.timetable.backend.controller
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import io.swagger.v3.core.converter.AnnotatedType
+import io.swagger.v3.core.converter.ModelConverter
+import io.swagger.v3.core.converter.ModelConverterContext
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.models.media.ArraySchema
+import io.swagger.v3.oas.models.media.NumberSchema
+import io.swagger.v3.oas.models.media.Schema
+import org.springdoc.core.converters.CollectionModelContentConverter
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.*
@@ -194,14 +205,3 @@ import kotlin.reflect.full.declaredMemberProperties
 //    }
 //}
 //
-class EntitiesToIdsSerializer: JsonSerializer<Collection<IdEntity>>(){
-    override fun serialize(value: Collection<IdEntity>, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeArray(value.map { it.id }.toLongArray(), 0, value.size)
-    }
-}
-
-class EntityToIdSerializer: JsonSerializer<IdEntity>(){
-    override fun serialize(value: IdEntity, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeNumber(value.id)
-    }
-}

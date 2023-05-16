@@ -1,8 +1,8 @@
 package ru.nsu.timetable.backend.entity
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import ru.nsu.timetable.backend.controller.EntitiesToIdsSerializer
-import ru.nsu.timetable.backend.controller.EntityToIdSerializer
+import ru.nsu.timetable.backend.config.EntitiesToIdsSerializer
+import ru.nsu.timetable.backend.config.EntityToIdSerializer
 import jakarta.persistence.*
 
 @Entity
