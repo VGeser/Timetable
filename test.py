@@ -10,29 +10,29 @@ s.headers['Authorization']=f'Bearer {token}'
 
 
 def add_teacher(name: str, slots: list[int]) -> int:
-    i = s.post(base+'/teachers', json={'name': name, 'slots': slots}).text
+    i = s.post(base+'/teachers', json={'name': name, 'slots': slots}).json()['id']
     print('Added teacher', i)
     return int(i)
 
 
 def add_room(name: str, capacity: int, tools: bool, slots: list[int]) -> int:
-    i = s.post(base+'/rooms', json={'name': name, 'capacity': capacity, 'tools': tools, 'slots': slots}).text
+    i = s.post(base+'/rooms', json={'name': name, 'capacity': capacity, 'tools': tools, 'slots': slots}).json()['id']
     print('Added room', i)
     return int(i)
 
 
 def add_course(name: str, tools: bool, frequency: int, teacher: int) -> int:
-    i = s.post(base+'/courses', json={'name': name, 'tools': tools, 'frequency': frequency, 'teacher': teacher}).text
+    i = s.post(base+'/courses', json={'name': name, 'tools': tools, 'frequency': frequency, 'teacher': teacher}).json()['id']
     print('Added course', i)
     return int(i)
 
 
 def add_group(name: str, quantity: int, availableSlots: list[int], courses: list[int]) -> int:
-    i = s.post(base+'/groups', json={'name': name, 'availableSlots': availableSlots, 'quantity': quantity, 'courses': courses,}).text
+    i = s.post(base+'/groups', json={'name': name, 'slots': availableSlots, 'quantity': quantity, 'courses': courses,}).json()['id']
     print('Added group', i)
     return int(i)
 
-
+print('dropping', s.post(base+'/dropdb'))
 if len(s.get(base + '/teachers').json()) == 0:
 
     t1 = add_teacher("Vlasov", [1,2,3, 8,9,10]) 

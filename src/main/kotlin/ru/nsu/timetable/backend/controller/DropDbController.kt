@@ -12,7 +12,7 @@ import ru.nsu.timetable.backend.repo.RepoProvider
 class DropDbController(
     val repos: RepoProvider,
 ) {
-    @GetMapping("dropdb")
+    @PostMapping("dropdb")
     fun dropdb(){
         repos.table.deleteAll()
         repos.groups.deleteAll()

@@ -6,7 +6,10 @@ import ru.nsu.timetable.backend.dto.SlotDto
 import ru.nsu.timetable.backend.dto.TimetableDto
 import ru.nsu.timetable.backend.entity.TimetableEntry
 import ru.nsu.timetable.backend.repo.RepoProvider
+import ru.nsu.timetable.backend.repo.TimeTableRepository
+import ru.nsu.timetable.backend.service.TimetableProblem
 import ru.nsu.timetable.backend.service.TimetableService
+import ru.nsu.timetable.backend.service.TimetableValidatorService
 
 
 @RestController
@@ -15,6 +18,8 @@ import ru.nsu.timetable.backend.service.TimetableService
 class TimetableController(
   val  tableService: TimetableService,
   val repos: RepoProvider,
+  val repo: TimeTableRepository,
+    val validator: TimetableValidatorService,
 ) {
     @PostMapping("generate")
     fun generate(){
@@ -46,9 +51,50 @@ class TimetableController(
                 SlotDto.NameId(entry.room.id, entry.room.name),
                 SlotDto.NameId(entry.teacher.id, entry.teacher.name),
                 SlotDto.NameId(entry.course.id, entry.course.name),
+                entry.id
             )
             res[entry.slot.day.toInt()][entry.slot.slotRow.toInt()] = slot
         }
         return res
     }
+
+    @GetMapping("problems")
+    fun getProblems(): List<TimetableProblem>{
+        return validator.validateCurrent()
+    }
+
+    @DeleteMapping("entry/{id}")
+    fun deleteEntry(@PathVariable id: Long){
+        repo.deleteById(id)
+    }
+
+    @PostMapping("entry/{id}/move")
+    fun moveEntry(@PathVariable id: Long, @RequestBody data: MoveEntryDTO){
+        val entry = repo.getReferenceById(id)
+        entry.slot = repos.slots.getReferenceById(data.slot)
+        repo.save(entry)
+    }
+
+    @PostMapping("entries")
+    fun createEntry(@RequestBody data: CreateEntryDTO): TimetableEntry{
+        return TimetableEntry(
+            slot = repos.slots.getReferenceById(data.slot),
+            teacher = repos.teachers.getReferenceById(data.teacher),
+            course = repos.courses.getReferenceById(data.course),
+            group = repos.groups.findAllById(data.groups).toSet(),
+            room = repos.rooms.getReferenceById(data.room),
+        ).let { repo.save(it) }
+    }
 }
+
+data class MoveEntryDTO(
+    val slot: Long,
+)
+
+data class CreateEntryDTO(
+    val slot: Long,
+    val room: Long,
+    val groups: Set<Long>,
+    val teacher: Long,
+    val course: Long,
+)
