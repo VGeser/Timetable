@@ -1,4 +1,4 @@
-package ru.nsu.timetable.backend.controller
+package ru.nsu.timetable.backend.controller.tte
 
 //import org.springframework.web.bind.annotation.ResponseStatus
 import io.swagger.v3.oas.annotations.Operation
@@ -7,17 +7,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.*
-import ru.nsu.timetable.backend.config.JsonArg
 import ru.nsu.timetable.backend.entity.Teacher
 import ru.nsu.timetable.backend.repo.SlotRepository
 import ru.nsu.timetable.backend.repo.TeacherRepository
 import ru.nsu.timetable.backend.repo.slotSet
 
 
+data class TeacherDto(
+    val name: String,
+    val slots: List<Long>,
+)
+
 @RequestMapping("/api/v1/teachers")
 @RestController
 @SecurityRequirement(name = "token")
-@Tag(name = "Teacher controller")
+@Tag(name = "1. Teacher controller")
 class TeacherController(val repo: TeacherRepository, val slotRepo: SlotRepository) {
     @Operation(summary = "Create teacher")
     @ApiResponses(
@@ -26,8 +30,8 @@ class TeacherController(val repo: TeacherRepository, val slotRepo: SlotRepositor
         ]
     )
     @PostMapping("")
-    fun post(@JsonArg("name") name: String, @JsonArg("slots") slots: List<Long>): Teacher {
-        return Teacher(name = name, availableSlots = slotRepo.slotSet(slots)).let { repo.save(it) }
+    fun post(@RequestBody data: TeacherDto): Teacher {
+        return Teacher(name = data.name, availableSlots = slotRepo.slotSet(data.slots)).let { repo.save(it) }
     }
 
 
@@ -52,7 +56,7 @@ class TeacherController(val repo: TeacherRepository, val slotRepo: SlotRepositor
     )
     @GetMapping("")
     fun getAll(): List<Teacher> {
-        return repo.findAll()
+        return repo.findAllActive()
     }
 
     @Operation(summary = "Update teacher information")
@@ -63,10 +67,10 @@ class TeacherController(val repo: TeacherRepository, val slotRepo: SlotRepositor
         ]
     )
     @PatchMapping("/{id}")
-    fun patch(@PathVariable id: Long, @JsonArg("name") name: String?, @JsonArg("slots") slots: List<Long>?): Teacher {
+    fun patch(@PathVariable id: Long, @RequestBody data: TeacherDto): Teacher {
         val teacher = repo.getReferenceById(id)
-        name?.let { teacher.name = it }
-        slots?.let { teacher.availableSlots = slotRepo.slotSet(it) }
+        teacher.name = data.name
+        teacher.availableSlots = slotRepo.slotSet(data.slots)
         repo.save(teacher)
         return teacher
     }

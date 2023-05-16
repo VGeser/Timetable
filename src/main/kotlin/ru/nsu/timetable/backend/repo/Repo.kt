@@ -10,10 +10,25 @@ interface SlotRepository: JpaRepository<Slot, Long>
 fun SlotRepository.slotSet(ids: List<Long>): Set<Slot> = findAllById(ids).toMutableSet()
 
 
-interface CourseRepository: JpaRepository<Course, Long>
-interface GroupRepository: JpaRepository<Group, Long>
-interface RoomRepository : JpaRepository<Room, Long>
-interface TeacherRepository: JpaRepository<Teacher, Long>
+
+
+interface CourseRepository: JpaRepository<Course, Long>{
+    @Query("select t from Course t where t.active")
+    fun findAllActive(): List<Course>
+}
+interface GroupRepository: JpaRepository<Group, Long>{
+    @Query("select t from Group t where t.active")
+    fun findAllActive(): List<Group>
+}
+interface RoomRepository : JpaRepository<Room, Long>{
+    @Query("select t from Room t where t.active")
+    fun findAllActive(): List<Room>
+}
+interface TeacherRepository: JpaRepository<Teacher, Long>{
+    @Query("select t from Teacher t where t.active")
+    fun findAllActive(): List<Teacher>
+}
+
 interface TimeTableRepository: JpaRepository<TimetableEntry, Long>{
     fun findAllByTeacher(teacher: Teacher): List<TimetableEntry>
     @Query("select t from TimetableEntry t where ?1 member  of t.group")

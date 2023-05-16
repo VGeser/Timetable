@@ -25,7 +25,8 @@ class OpenApiConfig  {
     fun customizeOpenAPI(): OpenApiCustomizer {
         return OpenApiCustomizer { openApi ->
             val tags = openApi.paths.values.map { it.readOperations().map { op -> op.tags }.flatten() }.flatten().toSet()
-            openApi.tags = tags.map { Tag().name(it) }
+            openApi.tags = tags.map { Tag().name(it) }.sortedBy { it.name }
+//            openApi.
         }
     }
 }

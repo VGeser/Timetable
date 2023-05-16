@@ -30,7 +30,7 @@ import ru.nsu.timetable.backend.exceptions.BadRequestException
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.VALUE_PARAMETER)
 //@Parameter(`in` = ParameterIn.DEFAULT)
-annotation class JsonArg(val name: String = "")
+private annotation class JsonArg(val name: String = "")
 
 @Configuration
 class WebConfig2(val mapper: ObjectMapper): WebMvcConfigurer {

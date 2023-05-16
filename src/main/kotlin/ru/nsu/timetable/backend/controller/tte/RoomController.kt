@@ -1,4 +1,4 @@
-package ru.nsu.timetable.backend.controller
+package ru.nsu.timetable.backend.controller.tte
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -6,16 +6,23 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.*
-import ru.nsu.timetable.backend.config.JsonArg
 import ru.nsu.timetable.backend.entity.Room
 import ru.nsu.timetable.backend.repo.SlotRepository
 import ru.nsu.timetable.backend.repo.RoomRepository
 import ru.nsu.timetable.backend.repo.slotSet
 
+
+data class RoomDto(
+    val name: String,
+    val capacity: Int,
+    val tools: Boolean,
+    val slots: List<Long>
+)
+
 @RequestMapping("/api/v1/rooms")
 @RestController
 @SecurityRequirement(name = "token")
-@Tag(name = "Room controller")
+@Tag(name = "2. Room controller")
 class RoomController(val repo: RoomRepository, val slotRepo: SlotRepository) {
     @Operation(summary = "Create room")
     @ApiResponses(
@@ -25,16 +32,13 @@ class RoomController(val repo: RoomRepository, val slotRepo: SlotRepository) {
     )
     @PostMapping("")
     fun post(
-        @JsonArg("name") name: String,
-        @JsonArg("capacity") capacity: Int,
-        @JsonArg("tools") hasTools: Boolean,
-        @JsonArg("slots") slots: List<Long>,
+        @RequestBody data: RoomDto
     ): Room {
         return Room(
-            name = name,
-            capacity = capacity,
-            tools = hasTools,
-            availableSlots = slotRepo.slotSet(slots)
+            name = data.name,
+            capacity = data.capacity,
+            tools = data.tools,
+            availableSlots = slotRepo.slotSet(data.slots)
         ).let { repo.save(it) }
     }
 
@@ -60,7 +64,7 @@ class RoomController(val repo: RoomRepository, val slotRepo: SlotRepository) {
     )
     @GetMapping("")
     fun getAll(): List<Room> {
-        return repo.findAll()
+        return repo.findAllActive()
     }
 
     @Operation(summary = "Update room information")
@@ -73,16 +77,13 @@ class RoomController(val repo: RoomRepository, val slotRepo: SlotRepository) {
     @PatchMapping("/{id}")
     fun patch(
         @PathVariable id: Long,
-        @JsonArg("name") name: String?,
-        @JsonArg("capacity") capacity: Int?,
-        @JsonArg("tools") hasTools: Boolean?,
-        @JsonArg("slots") slots: List<Long>?,
+        @RequestBody data: RoomDto,
     ): Room {
         val room = repo.getReferenceById(id)
-        name?.let { room.name = it }
-        capacity?.let { room.capacity = capacity }
-        hasTools?.let { room.tools = it }
-        slots?.let { room.availableSlots = slotRepo.slotSet(it) }
+        room.name = data.name
+        room.capacity = data.capacity
+        room.tools = data.tools
+        room.availableSlots = slotRepo.slotSet(data.slots)
         repo.save(room)
         return room
     }
