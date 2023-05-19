@@ -10,6 +10,7 @@ import ru.nsu.timetable.backend.repo.TimeTableRepository
 import ru.nsu.timetable.backend.service.TimetableProblem
 import ru.nsu.timetable.backend.service.TimetableService
 import ru.nsu.timetable.backend.service.TimetableValidatorService
+import ru.nsu.timetable.backend.websocket.SocketHandler
 
 
 @RestController
@@ -20,10 +21,12 @@ class TimetableController(
   val repos: RepoProvider,
   val repo: TimeTableRepository,
     val validator: TimetableValidatorService,
+    val socketHandler: SocketHandler,
 ) {
     @PostMapping("generate")
     fun generate(){
         tableService.generate()
+        socketHandler.notifyAllClients()
     }
 
     @GetMapping("teacher/{id}")
@@ -66,6 +69,7 @@ class TimetableController(
     @DeleteMapping("entry/{id}")
     fun deleteEntry(@PathVariable id: Long){
         repo.deleteById(id)
+        socketHandler.notifyAllClients()
     }
 
     @PostMapping("entry/{id}/move")
@@ -73,6 +77,7 @@ class TimetableController(
         val entry = repo.getReferenceById(id)
         entry.slot = repos.slots.getReferenceById(data.slot)
         repo.save(entry)
+        socketHandler.notifyAllClients()
     }
 
     @PostMapping("entries")
@@ -83,7 +88,9 @@ class TimetableController(
             course = repos.courses.getReferenceById(data.course),
             group = repos.groups.findAllById(data.groups).toSet(),
             room = repos.rooms.getReferenceById(data.room),
-        ).let { repo.save(it) }
+        ).let { repo.save(it) }.also{
+            socketHandler.notifyAllClients()
+        }
     }
 }
 

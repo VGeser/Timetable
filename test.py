@@ -10,7 +10,9 @@ s.headers['Authorization']=f'Bearer {token}'
 
 
 def add_teacher(name: str, slots: list[int]) -> int:
-    i = s.post(base+'/teachers', json={'name': name, 'slots': slots}).json()['id']
+    res = s.post(base+'/teachers', json={'name': name, 'slots': slots})
+    print(res.text)
+    i = res.json()['id']
     print('Added teacher', i)
     return int(i)
 
