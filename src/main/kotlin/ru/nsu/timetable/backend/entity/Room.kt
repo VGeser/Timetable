@@ -21,5 +21,5 @@ class Room(
     //slot is present only if its value is true
     @ManyToMany
     @JsonSerialize(using = EntitiesToIdsSerializer::class)
-    var availableSlots: Set<Slot> = setOf(),
+    var availableSlots: MutableSet<Slot> = mutableSetOf(),
 ): IdEntity(id)

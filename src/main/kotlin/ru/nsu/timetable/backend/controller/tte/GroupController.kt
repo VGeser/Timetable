@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
+import org.springframework.security.access.annotation.Secured
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpClientErrorException.NotFound
@@ -42,13 +43,14 @@ class GroupController(
         ]
     )
     @PostMapping("")
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     fun post(@RequestBody data: GroupDto): Group {
 
         return Group(
             name = data.name,
             availableSlots = slotRepo.slotSet(data.slots),
             quantity = data.quantity.toByte(),
-            courses = getCourses(data.courses).toSet()
+            courses = getCourses(data.courses).toMutableSet()
         ).let { repo.save(it) }
     }
 
@@ -84,13 +86,14 @@ class GroupController(
             ApiResponse(responseCode = "404", description = "Group with id does not exist")
         ]
     )
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     @PatchMapping("/{id}")
     fun patch(@PathVariable id: Long, @RequestBody data: GroupDto): Group {
         val group = repo.getReferenceById(id)
         group.name = data.name
         group.availableSlots = slotRepo.slotSet(data.slots)
         group.quantity = data.quantity.toByte()
-        group.courses = getCourses(data.courses).toSet()
+        group.courses = getCourses(data.courses).toMutableSet()
         repo.save(group)
         return group
     }
@@ -101,6 +104,7 @@ class GroupController(
         ApiResponse(responseCode = "404", description = "Group not found")
     ])
     @DeleteMapping("/{id}")
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     fun delete(@PathVariable id: Long){
         repo.getReferenceById(id).apply { active = false }.let { repo.save(it) }
     }

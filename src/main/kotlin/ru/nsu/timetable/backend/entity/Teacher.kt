@@ -15,9 +15,9 @@ class Teacher(
 
     @ManyToMany
     @JsonSerialize(using = EntitiesToIdsSerializer::class)
-    var availableSlots: Set<Slot> = setOf(),
+    var availableSlots: MutableSet<Slot> = mutableSetOf(),
 
     @OneToMany(mappedBy = "teacher")
     @JsonSerialize(using = EntitiesToIdsSerializer::class)
-    var courses: Set<Course> = setOf(),
+    var courses: MutableSet<Course> = mutableSetOf(),
 ): IdEntity(id)

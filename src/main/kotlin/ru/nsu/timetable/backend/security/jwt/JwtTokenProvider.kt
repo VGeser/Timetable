@@ -58,6 +58,7 @@ class JwtTokenProvider(
         } catch (e: Exception) {
             return null
         }
+        println("Logged in as ${userDetails.username} with role ${userDetails.authorities}")
         return UsernamePasswordAuthenticationToken(
             userDetails,
             "",

@@ -10,6 +10,7 @@ services:
     ports:
       - 5433:5432
   app:
+    restart: always
     build:
       .
     environment:

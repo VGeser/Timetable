@@ -27,5 +27,5 @@ class Course(
 ): IdEntity(id){
     @ManyToMany(mappedBy = "courses")
     @JsonSerialize(using = EntitiesToIdsSerializer::class)
-    var groups: Set<Group> = setOf()
+    var groups: MutableSet<Group> = mutableSetOf()
 }

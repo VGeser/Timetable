@@ -7,7 +7,7 @@ import ru.nsu.timetable.backend.entity.*
 
 interface SlotRepository: JpaRepository<Slot, Long>
 // 'Cause immutable set breaks JPA for some reason
-fun SlotRepository.slotSet(ids: List<Long>): Set<Slot> = findAllById(ids).toMutableSet()
+fun SlotRepository.slotSet(ids: List<Long>): MutableSet<Slot> = findAllById(ids).toMutableSet()
 
 
 

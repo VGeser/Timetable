@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.security.access.annotation.Secured
 import org.springframework.web.bind.annotation.*
 import ru.nsu.timetable.backend.entity.Room
 import ru.nsu.timetable.backend.repo.SlotRepository
@@ -31,6 +32,7 @@ class RoomController(val repo: RoomRepository, val slotRepo: SlotRepository) {
         ]
     )
     @PostMapping("")
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     fun post(
         @RequestBody data: RoomDto
     ): Room {
@@ -74,6 +76,7 @@ class RoomController(val repo: RoomRepository, val slotRepo: SlotRepository) {
             ApiResponse(responseCode = "404", description = "Room with id does not exist")
         ]
     )
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     @PatchMapping("/{id}")
     fun patch(
         @PathVariable id: Long,
@@ -93,6 +96,7 @@ class RoomController(val repo: RoomRepository, val slotRepo: SlotRepository) {
         ApiResponse(responseCode = "200", description = "Success"),
         ApiResponse(responseCode = "404", description = "Room not found")
     ])
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long){
         repo.getReferenceById(id).apply { active = false }.let { repo.save(it) }

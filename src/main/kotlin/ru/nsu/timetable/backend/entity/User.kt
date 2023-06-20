@@ -25,7 +25,7 @@ class User(
     var role: Role = Role.DISPATCHER,
 ) : UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
-        mutableListOf(SimpleGrantedAuthority(role.name))
+        mutableListOf(SimpleGrantedAuthority(role.roleName))
     override fun getPassword() = password
     override fun getUsername() = username
     override fun isAccountNonExpired() = true

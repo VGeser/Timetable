@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.security.access.annotation.Secured
 import org.springframework.web.bind.annotation.*
 import ru.nsu.timetable.backend.entity.Course
 import ru.nsu.timetable.backend.entity.Teacher
@@ -37,6 +38,7 @@ class CourseController(
         ]
     )
     @PostMapping("")
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     fun post(@RequestBody data: CourseDto): Course {
         return Course(
             name = data.name,
@@ -79,6 +81,7 @@ class CourseController(
         ]
     )
     @PatchMapping("/{id}")
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     fun patch(@PathVariable id: Long, @RequestBody data: CourseDto): Course {
         val course = repo.getReferenceById(id)
         course.name = data.name
@@ -95,6 +98,7 @@ class CourseController(
         ApiResponse(responseCode = "404", description = "course not found")
     ])
     @DeleteMapping("/{id}")
+    @Secured("ROLE_ADMIN", "ROLE_DISPATCHER")
     fun delete(@PathVariable id: Long){
         repo.getReferenceById(id).apply { active = false }.let { repo.save(it) }
     }

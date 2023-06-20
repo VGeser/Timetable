@@ -1,5 +1,8 @@
 package ru.nsu.timetable.backend.service
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import ru.nsu.timetable.backend.entity.Role
@@ -12,7 +15,13 @@ class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
 ) {
-    fun registerUser(username: String, name: String, password: String): User {
+    @Value("\${tt.admin.username}")
+    lateinit var adminUsername: String
+
+    @Value("\${tt.admin.password}")
+    lateinit var adminPassword: String
+
+    fun registerUser(username: String, name: String, password: String, role: Role = Role.DISPATCHER): User {
         if(userRepository.existsByUsername(username)){
             throw ValidationException("User already exists")
         }
@@ -20,7 +29,7 @@ class UserService(
             username = username,
             name = name,
             password = passwordEncoder.encode(password),
-            role = Role.DISPATCHER
+            role = role,
         )
         userRepository.save(user)
         return user
@@ -35,5 +44,12 @@ class UserService(
             return user
         }
         return null
+    }
+
+    @EventListener(ApplicationReadyEvent::class)
+    fun createDefaultUser(){
+        if(userRepository.findByUsername(adminUsername) == null){
+            registerUser(adminUsername, "admin", adminPassword, Role.ADMIN)
+        }
     }
 }

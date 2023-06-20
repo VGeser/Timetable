@@ -6,7 +6,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.springframework.security.access.annotation.Secured
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -31,6 +34,7 @@ class AuthController(
 
     @PostMapping("register")
     @Operation(summary = "Register new user")
+    @Secured("ROLE_ADMIN")
     @ApiResponses(
         ApiResponse(description = "User registered successfully", responseCode = "200"),
         ApiResponse(description = "User already exists", responseCode = "409"),
@@ -59,11 +63,13 @@ class AuthController(
         )
     }
 
-    @PostMapping("checkAuth")
+    @PostMapping("userInfo")
     @SecurityRequirement(name = "token")
-    @Operation(summary = "Check if your auth token is valid")
+    @Operation(summary = "Get current user information")
     fun checkAuth(principal: UsernamePasswordAuthenticationToken): CheckAuthDto {
         val user = principal.principal as User
-        return CheckAuthDto(user.name, user.role.name)
+        val authorities =
+            SecurityContextHolder.getContext().authentication.authorities as Collection<SimpleGrantedAuthority>
+        return CheckAuthDto(user.username, user.role.name)
     }
 }
