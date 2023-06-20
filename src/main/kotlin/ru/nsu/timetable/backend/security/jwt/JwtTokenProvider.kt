@@ -86,9 +86,11 @@ class JwtTokenProvider(
             val claims: Jws<Claims> = Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
             !claims.getBody().getExpiration().before(Date())
         } catch (e: JwtException) {
-            throw JwtAuthenticationException("JWT token is expired or invalid")
+            false
+//            throw JwtAuthenticationException("JWT token is expired or invalid")
         } catch (e: IllegalArgumentException) {
-            throw JwtAuthenticationException("JWT token is expired or invalid")
+            false
+//            throw JwtAuthenticationException("JWT token is expired or invalid")
         }
     }
 }
