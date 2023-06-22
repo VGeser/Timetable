@@ -26,7 +26,9 @@ class SocketHandler : TextWebSocketHandler() {
 
     fun notifyAllClients(){
         sessions.forEach {
-            it.sendMessage(TextMessage("reload"))
+            try{
+                it.sendMessage(TextMessage("reload"))
+            }catch (_: Exception){}
         }
     }
 }

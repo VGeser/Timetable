@@ -41,7 +41,9 @@ class TimetableValidatorService(
         val table = repo.findAll()
 //        val teachers = table.map { it.teacher }.toSet()
 //        val groups = table.map { it.group }.toSet()
-        val courses = table.map { it.course }.toSet()
+//        val courses = table.map { it.course }.toSet()
+
+        val courses = courseRepo.findAll()
 //        val rooms = table.map { it.room }.toSet()
 //        val slots = table.map { it.slot }.toSet()
 

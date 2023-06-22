@@ -56,7 +56,7 @@ class TimetableController(
                 SlotDto.NameId(entry.course.id, entry.course.name),
                 entry.id
             )
-            res[entry.slot.day.toInt()][entry.slot.slotRow.toInt()] = slot
+            res[entry.slot.slotRow.toInt()][entry.slot.day.toInt()] = slot
         }
         return res
     }
