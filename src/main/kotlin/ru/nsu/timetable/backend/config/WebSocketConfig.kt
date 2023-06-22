@@ -11,6 +11,6 @@ import ru.nsu.timetable.backend.websocket.SocketHandler
 @EnableWebSocket
 class WebSocketConfig(val handler: SocketHandler) : WebSocketConfigurer {
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-        registry.addHandler(handler, "/api/v1/socket")
+        registry.addHandler(handler, "/api/v1/socket").setAllowedOriginPatterns("*")
     }
 }

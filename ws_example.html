@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<style>
+    table, td {
+        border-collapse: collapse;
+        border: 1px solid black;
+    }
+
+    td {
+        height: 100px;
+        width: 100px;
+    }
+</style>
+<body>
+
+<div id="tableroot">
+
+</div>
+</body>
+<script>
+
+
+    (async () => {
+        const base_url = 'http://127.0.0.1:8080/api/v1'
+        let token = ''
+
+        async function makeRequest(method, endpoint, body) {
+            let resp = await fetch(
+                `${base_url}${endpoint}`,
+                {
+                    method: method,
+                    headers: {
+                        'Authentication': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                });
+            return await resp.json()
+        }
+
+        token = (await makeRequest('POST', '/login', {'username': 'ilya', 'password': '123'})).token
+        let slots = await makeRequest('GET', '/slots')
+        let slotMap = {}
+        for (let slot of slots) {
+            slotMap[slot.id] = slot
+        }
+        console.dir(slotMap)
+
+        async function showSchedule() {
+            let data = await makeRequest('GET', '/table/teacher/3')
+            console.dir(data)
+            const parent = document.getElementById('tableroot')
+            parent.innerHTML = ''
+            let table = document.createElement('table')
+            for (let y = 0; y < 7; y++) {
+                let tr = document.createElement('tr')
+                for (let x = 0; x < 7; x++) {
+                    let td = document.createElement('td')
+                    if (data[y][x] == null) {
+                        td.innerText = 'Empty'
+                    } else {
+                        const entry = data[y][x]
+                        td.innerText = `EID:${entry.entryId}\nCourse: ${entry.course.name}\nGroups: ${entry.groups.map(g => g.name)}\nRoom: ${entry.room.name}`
+                    }
+                    tr.appendChild(td)
+                }
+                table.appendChild(tr)
+            }
+            parent.appendChild(table)
+        }
+
+        await showSchedule();
+
+        let ws = new WebSocket('ws://127.0.0.1:8080/api/v1/socket')
+        ws.onmessage = showSchedule
+
+
+    })()
+
+
+</script>
+</html>

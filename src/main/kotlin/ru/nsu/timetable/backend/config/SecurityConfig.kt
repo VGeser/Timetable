@@ -64,6 +64,7 @@ class SecurityConfig(
             .requestMatchers(HttpMethod.GET,
                 "/api/v1/slots"
             ).permitAll()
+            .requestMatchers("/api/v1/socket").permitAll()
             .anyRequest().authenticated()
             .and()
             .apply<SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity>>(JwtConfigurer(jwtTokenProvider, filter))
