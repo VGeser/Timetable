@@ -39,6 +39,7 @@ interface TimeTableRepository: JpaRepository<TimetableEntry, Long>{
 
 interface UserRepository : JpaRepository<User, Long>{
     fun findByUsername(name: String): User?
+    fun getByUsername(username: String): User
     fun existsByUsername(name: String): Boolean
 }
 
